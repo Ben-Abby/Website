@@ -1,0 +1,67 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>Abby — Admin preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}body{font-family:Poppins,system-ui,sans-serif;background:#14141F;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:#1d1d2b;border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:36px;max-width:520px;width:100%}
+h1{font-size:21px;font-weight:600;margin-bottom:4px}.sub{color:rgba(255,255,255,.62);font-size:13.5px;line-height:1.55;margin-bottom:22px}
+input{width:100%;padding:13px 15px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:#14141F;color:#fff;font-size:14px;font-family:inherit;outline:none}
+input:focus{border-color:#6565F2}
+button{width:100%;margin-top:12px;padding:13px;border:0;border-radius:10px;background:#6565F2;color:#fff;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;box-shadow:0 3px 0 #4a4add}
+button:active{transform:translateY(2px);box-shadow:none}
+.err{color:#ff8f8f;font-size:12.5px;margin-top:10px;display:none}
+.logo{height:26px;margin-bottom:22px;font-weight:700;font-size:22px;color:#8f8ff7;letter-spacing:.5px}
+.links{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+a.pv{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 17px;border:1px solid rgba(255,255,255,.11);border-radius:12px;color:#fff;text-decoration:none;transition:.15s}
+a.pv:hover{border-color:#6565F2;background:rgba(101,101,242,.08)}
+a.pv b{font-size:14.5px;display:block;margin-bottom:2px}a.pv span{font-size:12px;color:rgba(255,255,255,.58);line-height:1.45}
+a.pv .go{color:#8f8ff7;font-size:18px;flex:0 0 auto}
+.fb{margin-top:22px;padding:14px 16px;background:rgba(101,101,242,.1);border-radius:10px;font-size:12.5px;color:rgba(255,255,255,.75);line-height:1.55}
+.note{margin-top:14px;font-size:11.5px;color:rgba(255,255,255,.4);line-height:1.5}
+.spin{display:none;margin-top:14px;font-size:13px;color:rgba(255,255,255,.6)}
+</style></head><body>
+<div class="card">
+  <div class="logo">Abby</div>
+  <div id="lock">
+    <h1>Admin platform preview</h1>
+    <div class="sub">Internal review build — three surfaces of the new admin ecosystem. Enter the team password.</div>
+    <input id="pw" type="password" placeholder="Team password" autofocus>
+    <button id="go">Unlock</button>
+    <div class="err" id="err">That's not it — check the password Ben shared.</div>
+  </div>
+  <div id="menu" style="display:none">
+    <h1>Admin platform preview</h1>
+    <div class="sub">Three surfaces, one build. Demo data — real companies modelled as live tenants.</div>
+    <div class="links"><a class="pv" href="dso-admin.html"><span><b>DSO Admin</b><span>What AquaSource (and every brand) sees — the tenant console.</span></span><span class="go">→</span></a><a class="pv" href="abby-admin.html"><span><b>Abby Admin — Staff</b><span>Our global console — company select, delegated tenant entry, staff powers.</span></span><span class="go">→</span></a><a class="pv" href="leader-portal.html"><span><b>Leader Portal</b><span>What a field leader sees — team pulse, programme editor, my business.</span></span><span class="go">→</span></a></div>
+    <div class="fb"><b>Feedback:</b> note the surface + page + what you'd change, and drop it in the team channel or email <a href="mailto:ben@abby-ai.com?subject=Admin%20preview%20feedback" style="color:#8f8ff7">ben@abby-ai.com</a>. Screenshots welcome — everything here is clickable, so go deep.</div>
+    <div class="note">Unlocked for this browser tab session. Nothing here is indexed or linked from the public site.</div>
+  </div>
+</div>
+<script>const CHECK={"salt": "c/T8Q8GKV1jEUPolQPE0pQ==", "nonce": "PewgqrX1uT6jCTEq", "ct": "L0a5p8qT14d0w0C6pPkoIJDsxyfkpZjb9OHxom59jA==", "iter": 300000};
+async function deriveKey(pw,saltB64,iter){
+  const enc=new TextEncoder();
+  const mat=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt:Uint8Array.from(atob(saltB64),c=>c.charCodeAt(0)),iterations:iter,hash:'SHA-256'},mat,{name:'AES-GCM',length:256},false,['decrypt']);
+}
+async function decrypt(pw,P){
+  const key=await deriveKey(pw,P.salt,P.iter);
+  const buf=await crypto.subtle.decrypt({name:'AES-GCM',iv:Uint8Array.from(atob(P.nonce),c=>c.charCodeAt(0))},key,Uint8Array.from(atob(P.ct),c=>c.charCodeAt(0)));
+  return new TextDecoder().decode(buf);
+}
+
+async function attempt(pw){
+  if(!pw)return;
+  try{
+    await decrypt(pw,CHECK);
+    try{sessionStorage.setItem('abbypv',pw)}catch(e){}
+    document.getElementById('lock').style.display='none';
+    document.getElementById('menu').style.display='block';
+  }catch(e){
+    document.getElementById('err').style.display='block';
+  }
+}
+document.getElementById('go').addEventListener('click',()=>attempt(document.getElementById('pw').value));
+document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')attempt(e.target.value)});
+try{const saved=sessionStorage.getItem('abbypv');if(saved)attempt(saved)}catch(e){}
+</script></body></html>
